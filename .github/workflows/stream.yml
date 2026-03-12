@@ -1,0 +1,36 @@
+name: Stream Telegram
+
+on:
+  workflow_dispatch:  # تشغيل يدوي من GitHub
+  schedule:
+    - cron: '0 */5 * * *'  # إعادة تشغيل كل 5 ساعات تلقائياً (GitHub يوقف بعد 6h)
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350  # أقصى وقت قبل إيقاف GitHub (6h = 360min)
+
+    steps:
+      - name: ✅ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install flask
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+
+      - name: 🎬 Verify ffmpeg
+        run: ffmpeg -version | head -3
+
+      - name: 🚀 Start Stream
+        env:
+          INPUT_URL: ${{ secrets.INPUT_URL }}
+          OUTPUT_URL: ${{ secrets.OUTPUT_URL }}
+        run: python stream.py
+
